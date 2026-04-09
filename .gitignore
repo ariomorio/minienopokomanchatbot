@@ -1,0 +1,12 @@
+node_modules/
+.next/
+out/
+.vercel/
+.env
+.env.local
+.env*.local
+error.log
+temp_posts.zip
+tsconfig.tsbuildinfo
+.claude/
+.vercel

@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ミニえのぽこまん - デモ出力サンプル</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+    background: #050505;
+    color: #ededed;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ===== Page Header ===== */
+  .page-header {
+    text-align: center;
+    padding: 48px 24px 32px;
+    border-bottom: 1px solid #1a1a1a;
+    background: linear-gradient(180deg, #0f0a1a 0%, #050505 100%);
+  }
+  .page-header h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .page-header p {
+    color: #737373;
+    font-size: .9rem;
+  }
+  .page-header .badge {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 3px 12px;
+    font-size: .7rem;
+    font-weight: 600;
+    color: #c084fc;
+    border: 1px solid rgba(168, 85, 247, .3);
+    border-radius: 999px;
+    background: rgba(168, 85, 247, .08);
+  }
+
+  /* ===== Mode Section ===== */
+  .mode-section {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 16px;
+  }
+  .mode-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 32px 0 16px;
+    border-bottom: 1px solid #1a1a1a;
+    margin-bottom: 24px;
+  }
+  .mode-title .mode-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .mode-title .mode-icon.concept { background: rgba(147, 51, 234, .15); border: 1px solid rgba(147, 51, 234, .3); }
+  .mode-title .mode-icon.analysis { background: rgba(6, 182, 212, .15); border: 1px solid rgba(6, 182, 212, .3); }
+  .mode-title .mode-icon.strategy { background: rgba(245, 158, 11, .15); border: 1px solid rgba(245, 158, 11, .3); }
+  .mode-title h2 { font-size: 1.2rem; font-weight: 700; }
+  .mode-title span { color: #737373; font-size: .8rem; }
+
+  /* ===== Chat Phone Frame ===== */
+  .chat-frame {
+    margin-bottom: 32px;
+    border-radius: 24px;
+    overflow: hidden;
+    border: 1px solid #262626;
+    background: #0a0a0a;
+    box-shadow: 0 8px 32px rgba(0,0,0,.4);
+  }
+
+  /* Chat Header */
+  .chat-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid #1f1f1f;
+    backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .chat-header.concept { background: rgba(88, 28, 135, .2); }
+  .chat-header.analysis { background: rgba(8, 145, 178, .2); }
+  .chat-header.strategy { background: rgba(180, 83, 9, .2); }
+  .chat-header .h-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    background: rgba(38,38,38,.5);
+  }
+  .chat-header.concept .h-icon { box-shadow: 0 0 0 2px rgba(147, 51, 234, .3); }
+  .chat-header.analysis .h-icon { box-shadow: 0 0 0 2px rgba(6, 182, 212, .3); }
+  .chat-header.strategy .h-icon { box-shadow: 0 0 0 2px rgba(245, 158, 11, .3); }
+  .chat-header h3 { font-size: .9rem; font-weight: 600; color: #fff; }
+  .chat-header .sub { font-size: .7rem; color: #737373; }
+
+  /* Scenario label */
+  .scenario-label {
+    padding: 6px 18px;
+    background: #111;
+    border-bottom: 1px solid #1a1a1a;
+    font-size: .75rem;
+    color: #525252;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .scenario-label::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #404040;
+  }
+
+  /* Chat Body */
+  .chat-body {
+    padding: 20px 16px;
+    min-height: 100px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* Messages */
+  .msg {
+    display: flex;
+    gap: 10px;
+    max-width: 100%;
+  }
+  .msg.user { justify-content: flex-end; }
+  .msg.ai { justify-content: flex-start; }
+
+  .msg .avatar {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 2px;
+    overflow: hidden;
+    background: #1a1a2e;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    border: 1px solid #333;
+  }
+
+  .msg .bubble {
+    max-width: 82%;
+    border-radius: 18px;
+    padding: 14px 18px;
+    font-size: .85rem;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  /* User bubble colors by mode */
+  .msg.user .bubble.concept { background: linear-gradient(135deg, #7c3aed, #4f46e5); color: #fff; }
+  .msg.user .bubble.analysis { background: linear-gradient(135deg, #0891b2, #0d9488); color: #fff; }
+  .msg.user .bubble.strategy { background: linear-gradient(135deg, #d97706, #ea580c); color: #fff; }
+
+  /* AI bubble colors by mode */
+  .msg.ai .bubble.concept { background: #1c1c1c; border: 1px solid rgba(147, 51, 234, .25); color: #e5e5e5; }
+  .msg.ai .bubble.analysis { background: #1c1c1c; border: 1px solid rgba(6, 182, 212, .25); color: #e5e5e5; }
+  .msg.ai .bubble.strategy { background: #1c1c1c; border: 1px solid rgba(245, 158, 11, .25); color: #e5e5e5; }
+
+  .msg .bubble strong { color: #fff; }
+
+  /* Chat Input Fake */
+  .chat-input-fake {
+    padding: 12px 16px;
+    border-top: 1px solid #1f1f1f;
+    background: #111;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .chat-input-fake .input-area {
+    flex: 1;
+    padding: 10px 16px;
+    background: #1c1c1c;
+    border: 1px solid #333;
+    border-radius: 20px;
+    color: #525252;
+    font-size: .8rem;
+  }
+  .chat-input-fake .send-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: #7c3aed;
+    border: none;
+    display: flex; align-items: center; justify-content: center;
+    opacity: .3;
+  }
+  .chat-input-fake .send-btn svg {
+    width: 16px; height: 16px;
+    stroke: #fff;
+    fill: none;
+    stroke-width: 2;
+  }
+
+  /* ===== Footer ===== */
+  .page-footer {
+    text-align: center;
+    padding: 40px 24px;
+    color: #404040;
+    font-size: .7rem;
+    border-top: 1px solid #1a1a1a;
+  }
+
+  /* ===== Print ===== */
+  @media print {
+    body { background: #fff; color: #111; }
+    .chat-frame { border-color: #ddd; background: #fafafa; box-shadow: none; }
+    .chat-header, .chat-header.concept, .chat-header.analysis, .chat-header.strategy { background: #f0f0f0; }
+    .chat-header h3 { color: #111; }
+    .chat-body { background: #fff; }
+    .msg.ai .bubble, .msg.ai .bubble.concept, .msg.ai .bubble.analysis, .msg.ai .bubble.strategy { background: #f5f5f5; border-color: #ddd; color: #222; }
+    .msg .bubble strong { color: #111; }
+    .page-header { background: #fff; border-color: #ddd; }
+    .page-header h1 { color: #111; }
+    .mode-title { border-color: #ddd; }
+    .mode-title h2 { color: #111; }
+    .scenario-label { background: #f5f5f5; border-color: #ddd; color: #666; }
+    .chat-input-fake { background: #f5f5f5; border-color: #ddd; }
+    .chat-input-fake .input-area { background: #eee; border-color: #ccc; }
+  }
+
+  @media (max-width: 480px) {
+    .page-header { padding: 32px 16px 24px; }
+    .page-header h1 { font-size: 1.3rem; }
+    .chat-frame { border-radius: 18px; }
+    .msg .bubble { max-width: 90%; padding: 12px 14px; font-size: .82rem; }
+  }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <h1>ミニえのぽこまん</h1>
+  <p>デモ出力サンプル — 各モードの実際のAI回答例</p>
+  <div class="badge">DEMO OUTPUT SAMPLES</div>
+</header>
+
+<!-- ========== コンセプト設計 ========== -->
+<div class="mode-section">
+  <div class="mode-title">
+    <div class="mode-icon concept">&#x2728;</div>
+    <div>
+      <h2>コンセプト設計</h2>
+      <span>「誰に、何を、どう伝えるか」を明確にする</span>
+    </div>
+  </div>
+
+  <!-- Sample 1 -->
+  <div class="chat-frame">
+    <div class="chat-header concept">
+      <div class="h-icon">&#x2728;</div>
+      <div><h3>コンセプト設計</h3><div class="sub">独自のコンセプトを創り出す</div></div>
+    </div>
+    <div class="scenario-label">サンプル: ヨガインストラクター</div>
+    <div class="chat-body">
+      <div class="msg ai">
+        <div class="avatar">&#x1F916;</div>
+        <div class="bubble concept">前提条件を確認します。以下の項目を入力してください。
+
+1. ターゲット属性（誰に）
+2. 提供サービス（何を）
+3. 解決する悩み</div>
+      </div>
+      <div class="msg user">
+        <div class="bubble concept">30代の働く女性に、オンラインヨガレッスンを提供して、体の不調やストレスを解消したいです</div>
+      </div>
+      <div class="msg ai">
+        <div class="avatar">&#x1F916;</div>
+        <div class="bubble concept">30代の働く女性の方々へのオンラインヨガレッスンで、体の不調やストレスを解消されたいというお気持ち、とてもよく分かります。現代を生きる多くの女性が抱える共通の課題ですね。
+
+ここから、さらに具体的な価値を明確にしていきましょう。
+
+次なるステップとして、このオンラインヨガレッスンを通じて、お客様を具体的に「<strong>どこへ導きたい</strong>」とお考えでしょうか？どのような状態になっていただきたいか、お聞かせください。</div>
+      </div>
+    </div>
+    <div class="chat-input-fake">
+      <div class="input-area">ミニえのぽこまんと話す</div>
+      <div class="send-btn"><svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg></div>
+    </div>
+  </div>
+
+  <!-- Sample 2 -->
+  <div class="chat-frame">
+    <div class="chat-header concept">
+      <div class="h-icon">&#x2728;</div>
+      <div><h3>コンセプト設計</h3><div class="sub">独自のコンセプトを創り出す</div></div>
+    </div>
+    <div class="scenario-label">サンプル: 副業コンサルタント</div>
+    <div class="chat-body">
+      <div class="msg ai">
+        <div class="avatar">&#x1F916;</div>
+        <div class="bubble concept">前提条件を確認します。以下の項目を入力してください。
+
+1. ターゲット属性（誰に）
+2. 提供サービス（何を）
+3. 解決する悩み</div>
+      </div>
+      <div class="msg user">
+        <div class="bubble concept">会社員で副業を始めたい人に、SNSを使った副業の始め方をコンサルしたいです。自分は2年前にInstagramで月30万稼げるようになりました</div>
+      </div>
+      <div class="msg ai">
+        <div class="avatar">&#x1F916;</div>
+        <div class="bubble concept">お気持ち、とてもよくわかります。会社員として副業を始めたいという意欲は素晴らしいですね。また、ご自身がInstagramで実績を出された経験は、その分野で教える上での強力な根拠となります。
+
+それでは、現在の情報から、より具体的なコンセプトを構築するため、深掘りさせていただきます。
+
+解決する悩みについて、もう少し詳しくお聞かせいただけますでしょうか？
+
+<strong>結論として、会社員で副業を始めたい方が具体的にどのような悩みを抱えているのか、明確にすることが重要です。</strong>
+
+<strong>理由は、ターゲットが心から共感する悩みを具体的にすることで、提供するサービスの価値がより伝わりやすくなるためです。</strong>
+
+例えば、「副業を始めたいけれど、何から手をつけていいか分からない」「本業で忙しく、時間がない中でどう両立すればいいか不安」「本当に稼げるようになるのか、具体的なイメージが湧かない」「怪しい情報が多く、何が正しいか判断できない」など、彼らが具体的にどのような壁にぶつかっているのか、お聞かせいただけますでしょうか。</div>
+      </div>
+    </div>
+    <div class="chat-input-fake">
+      <div class="input-area">ミニえのぽこまんと話す</div>
+      <div class="send-btn"><svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg></div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 自己分析 ========== -->
+<div class="mode-section">
+  <div class="mode-title">
+    <div class="mode-icon analysis">&#x1F50D;</div>
+    <div>
+      <h2>自己分析</h2>
+      <span>コーチング的な深掘りで内面を引き出す</span>
+    </div>
+  </div>
+
+  <!-- Sample 3 -->
+  <div class="chat-frame">
+    <div class="chat-header analysis">
+      <div class="h-icon">&#x1F50D;</div>
+      <div><h3>自己分析</h3><div class="sub">内面を深く掘り下げる</div></div>
+    </div>
+    <div class="scenario-label">サンプル: 方向性の迷い</div>
+    <div class="chat-body">
+      <div class="msg ai">
+        <div class="avatar">&#x1F916;</div>
+        <div class="bubble analysis">前提条件を確認します。以下の項目について入力してください。
+
+・現在抱えているモヤモヤや、壁に感じていること（率直な気持ち）</div>
+      </div>
+      <div class="msg user">
+        <div class="bubble analysis">発信を続けているのですが、自分が本当に伝えたいことが何なのかわからなくなってきました。フォロワーも500人くらいで伸び悩んでいます</div>
+      </div>
+      <div class="msg ai">
+        <div class="avatar">&#x1F916;</div>
+        <div class="bubble analysis">お気持ち、とてもよくわかります。発信を続ける中で、ご自身の軸が揺らいでしまったり、届けたいものが曖昧になったりすることは少なくありません。フォロワーの伸び悩みが、さらにその不安を煽るという悪循環も、非常によく理解できます。
+
+それでは、まずその「自分が本当に伝えたいことが何なのかわからなくなってきた」という点について、もう少し掘り下げてみましょう。
+
+率直に伺いますが、<strong>なぜ、そのように感じ始めたのでしょうか？以前は明確だった、あるいは明確だと思っていたことがあったのでしょうか？</strong></div>
+      </div>
+    </div>
+    <div class="chat-input-fake">
+      <div class="input-area">ミニえのぽこまんと話す</div>
+      <div class="send-btn"><svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg></div>
+    </div>
+  </div>
+
+  <!-- Sample 4 -->
+  <div class="chat-frame">
+    <div class="chat-header analysis">
+      <div class="h-icon">&#x1F50D;</div>
+      <div><h3>自己分析</h3><div class="sub">内面を深く掘り下げる</div></div>
+    </div>
+    <div class="scenario-label">サンプル: 自信のなさ</div>
+    <div class="chat-body">
+      <div class="msg ai">
+        <div class="avatar">&#x1F916;</div>
+        <div class="bubble analysis">前提条件を確認します。以下の項目について入力してください。
+
+・現在抱えているモヤモヤや、壁に感じていること（率直な気持ち）</div>
+      </div>
+      <div class="msg user">
+        <div class="bubble analysis">周りのインフルエンサーと比べてしまって、自分なんかが発信していいのかと感じてしまいます。特別なスキルも実績もないし…</div>
+      </div>
+      <div class="msg ai">
+        <div class="avatar">&#x1F916;</div>
+        <div class="bubble analysis">お気持ち、とてもよくわかります。周りの方々とご自身を比較してしまい、発信することに躊躇を感じてしまうのですね。
+
+率直に申し上げますと、「自分なんかが発信していいのか」と感じてしまう背景には、どのような考えが隠れているのでしょうか？もう少し詳しくお聞かせいただけますでしょうか。</div>
+      </div>
+    </div>
+    <div class="chat-input-fake">
+      <div class="input-area">ミニえのぽこまんと話す</div>
+      <div class="send-btn"><svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg></div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 戦略設計 ========== -->
+<div class="mode-section">
+  <div class="mode-title">
+    <div class="mode-icon strategy">&#x1F680;</div>
+    <div>
+      <h2>戦略設計</h2>
+      <span>具体的なアクションプランを作成する</span>
+    </div>
+  </div>
+
+  <!-- Sample 5 -->
+  <div class="chat-frame">
+    <div class="chat-header strategy">
+      <div class="h-icon">&#x1F680;</div>
+      <div><h3>戦略設計</h3><div class="sub">成長戦略を設計する</div></div>
+    </div>
+    <div class="scenario-label">サンプル: Instagram初心者（フォロワー200人）</div>
+    <div class="chat-body">
+      <div class="msg ai">
+        <div class="avatar">&#x1F916;</div>
+        <div class="bubble strategy">前提条件を確認します。現状把握のため、以下の項目を入力してください。
+
+1.現在のフォロワー数
+2.現状の悩み・課題</div>
+      </div>
+      <div class="msg user">
+        <div class="bubble strategy">フォロワー200人です。美容系で発信していますが投稿しても全然伸びません。週3回は投稿しています</div>
+      </div>
+      <div class="msg ai">
+        <div class="avatar">&#x1F916;</div>
+        <div class="bubble strategy">フォロワー200人、週3回の美容系投稿で伸び悩んでいらっしゃるのですね。お気持ち、とてもよくわかります。せっかく時間と労力をかけて投稿されているのに、手応えがないと本当に辛いですよね。
+
+率直に申し上げますと、フォロワー200人という初期段階では、「伸びない」と感じることは決して珍しいことではありません。しかし、そこには必ず伸び悩む原因と、それを突破するヒントが隠されています。まずは、現状をもう少し深掘りさせてください。
+
+<strong>1. ターゲット層とコンセプトの具体性:</strong>
+  ・どのような美容ジャンルに特化し、どのようなターゲット層に向けて発信されていますか？
+  ・ご自身の発信を通じて、最終的にターゲットに「どうなってほしい」とお考えですか？
+
+<strong>2. 投稿内容とデータ:</strong>
+  ・主にどのような形式の投稿（リール動画、静止画、カルーセルなど）をされていますか？
+  ・最近の投稿の平均的な「いいね数」「保存数」「リーチ数」はどのくらいでしょうか？
+
+<strong>3. 投稿前の戦略と分析:</strong>
+  ・投稿内容を決める際、どのような基準でテーマを選んでいますか？
+  ・投稿後、インサイト（分析機能）を確認されていますか？
+
+これらの情報から、具体的な戦略を組み立てていきましょう。</div>
+      </div>
+    </div>
+    <div class="chat-input-fake">
+      <div class="input-area">ミニえのぽこまんと話す</div>
+      <div class="send-btn"><svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg></div>
+    </div>
+  </div>
+
+  <!-- Sample 6 -->
+  <div class="chat-frame">
+    <div class="chat-header strategy">
+      <div class="h-icon">&#x1F680;</div>
+      <div><h3>戦略設計</h3><div class="sub">成長戦略を設計する</div></div>
+    </div>
+    <div class="scenario-label">サンプル: 収益化の壁（フォロワー3000人）</div>
+    <div class="chat-body">
+      <div class="msg ai">
+        <div class="avatar">&#x1F916;</div>
+        <div class="bubble strategy">前提条件を確認します。現状把握のため、以下の項目を入力してください。
+
+1.現在のフォロワー数
+2.現状の悩み・課題</div>
+      </div>
+      <div class="msg user">
+        <div class="bubble strategy">フォロワー3000人です。料理系のアカウントで毎日投稿していますが、収益化の方法がわかりません。アフィリエイトはやっていますが月5000円程度です</div>
+      </div>
+      <div class="msg ai">
+        <div class="avatar">&#x1F916;</div>
+        <div class="bubble strategy">お気持ち、とてもよくわかります。毎日投稿という継続的な努力をされている中で、収益化の壁に直面されているのですね。その上で、率直に申し上げますと、フォロワー3000人という数字は、適切な戦略を立てれば収益化のポテンシャルを十分に秘めていると言えます。
+
+<strong>要点の結論</strong>
+
+現在の主な課題は、収益源がアフィリエイトに限定されており、その収益性もまだ最適化されていない点にあります。料理系アカウントの特性を最大限に活かし、収益源を多角化することで、フォロワー数に見合った収益を実現することは十分に可能です。
+
+<strong>具体的な収益化戦略:</strong>
+
+<strong>1. アフィリエイトの最適化</strong>
+紹介している商品がフォロワーのニーズに合っているか、より単価の高い商品はないか再確認。レシピ紹介時に「特定の調味料セット」をアフィリエイトで紹介するなど、具体的な使用シーンと結びつけることが重要です。
+
+<strong>2. デジタルコンテンツの販売</strong>
+・有料レシピ集（時短レシピ、節約レシピなど）をPDFや電子書籍で販売
+・オンライン料理教室/ワークショップの開催
+・目的別の食事プランの提供
+
+<strong>3. ブランド提携・PR案件</strong>
+食品メーカー、調味料ブランド、キッチン用品メーカーなどと提携。フォロワー数3000人でも、エンゲージメント率が高ければ依頼が来る可能性は十分にあります。
+
+<strong>4. ファンコミュニティの運営</strong>
+月額課金制のオンラインサロンやメンバーシップを立ち上げ、限定レシピの公開、Q&Aセッション、料理相談などを行う。
+
+まずは、これらの選択肢の中から、ご自身のアカウントの方向性と最も親和性が高いものについて、もう少し深掘りして考えてみてはいかがでしょうか。</div>
+      </div>
+    </div>
+    <div class="chat-input-fake">
+      <div class="input-area">ミニえのぽこまんと話す</div>
+      <div class="send-btn"><svg viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg></div>
+    </div>
+  </div>
+</div>
+
+<footer class="page-footer">
+  &copy; 2026 ミニえのぽこまん — Demo Output Samples<br>
+  Powered by Gemini AI
+</footer>
+
+</body>
+</html>
