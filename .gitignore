@@ -10,3 +10,4 @@ temp_posts.zip
 tsconfig.tsbuildinfo
 .claude/
 .vercel
+.env.client
