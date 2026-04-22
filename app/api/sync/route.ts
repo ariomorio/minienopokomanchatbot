@@ -1,4 +1,4 @@
-// Sync API Route Handler - Lark Base ↔ Pinecone 双方向同期
+// Sync API Route Handler - Supabase ↔ Pinecone 差分同期
 import { NextRequest } from 'next/server';
 import {
     fetchPendingKnowledgeRecords,
@@ -6,6 +6,8 @@ import {
 } from '@/lib/supabase';
 import { upsertVectors } from '@/lib/vectordb';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+
+export const maxDuration = 300;
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 const EMBEDDING_MODEL = 'gemini-embedding-001';
@@ -35,8 +37,13 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        // ?limit=N で1リクエストあたりの処理件数を制限（デフォ 100）
+        const { searchParams } = new URL(request.url);
+        const limit = Math.max(1, Math.min(500, Number(searchParams.get('limit')) || 100));
+
         // sync_status が pending または未設定のレコードのみ取得（差分同期）
-        const pendingRecords = await fetchPendingKnowledgeRecords();
+        const allPending = await fetchPendingKnowledgeRecords();
+        const pendingRecords = allPending.slice(0, limit);
 
         if (pendingRecords.length === 0) {
             return new Response(
@@ -147,7 +154,9 @@ export async function POST(request: NextRequest) {
                 data: {
                     synced: syncedCount,
                     errors: errorCount,
-                    total_pending: pendingRecords.length,
+                    processed: pendingRecords.length,
+                    total_pending_before: allPending.length,
+                    remaining_estimate: Math.max(0, allPending.length - syncedCount),
                     error_details:
                         errors.length > 0 ? errors.slice(0, 10) : undefined,
                     timestamp: new Date().toISOString(),
