@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ミニえのぽこまん｜プロジェクト現状レポート</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Helvetica Neue', Arial, sans-serif; background: #f0f2f5; color: #1a1a2e; }
+
+  .header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white; padding: 40px 60px;
+  }
+  .header h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+  .header p { font-size: 14px; opacity: 0.85; }
+  .header .date { font-size: 13px; opacity: 0.7; margin-top: 8px; }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 40px 30px; }
+
+  /* Status Banner */
+  .status-banner {
+    background: #d4edda; border: 1px solid #c3e6cb; border-radius: 12px;
+    padding: 20px 30px; margin-bottom: 32px; display: flex; align-items: center; gap: 16px;
+  }
+  .status-banner .icon { font-size: 36px; }
+  .status-banner h2 { font-size: 18px; color: #155724; font-weight: 700; }
+  .status-banner p { font-size: 13px; color: #1e7e34; margin-top: 4px; }
+
+  /* Section */
+  .section { margin-bottom: 32px; }
+  .section-title {
+    font-size: 16px; font-weight: 700; color: #495057;
+    border-left: 4px solid #667eea; padding-left: 12px; margin-bottom: 16px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+
+  /* Cards Grid */
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+  .card {
+    background: white; border-radius: 12px; padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06); border: 1px solid #e9ecef;
+  }
+  .card .label { font-size: 11px; color: #6c757d; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .card .value { font-size: 28px; font-weight: 800; color: #667eea; }
+  .card .sub { font-size: 12px; color: #6c757d; margin-top: 4px; }
+
+  /* Architecture */
+  .arch {
+    background: white; border-radius: 12px; padding: 30px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .arch-flow {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    justify-content: center; margin: 20px 0;
+  }
+  .arch-box {
+    background: #f8f9fa; border: 2px solid #dee2e6; border-radius: 10px;
+    padding: 14px 18px; text-align: center; min-width: 120px;
+  }
+  .arch-box.primary { background: #667eea; color: white; border-color: #667eea; }
+  .arch-box.success { background: #28a745; color: white; border-color: #28a745; }
+  .arch-box .arch-icon { font-size: 20px; margin-bottom: 4px; }
+  .arch-box .arch-name { font-size: 12px; font-weight: 700; }
+  .arch-box .arch-detail { font-size: 10px; opacity: 0.8; margin-top: 2px; }
+  .arch-arrow { font-size: 18px; color: #adb5bd; }
+
+  /* Table */
+  .info-table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .info-table th { background: #f8f9fa; font-size: 12px; color: #6c757d; text-transform: uppercase; letter-spacing: 0.5px; padding: 12px 16px; text-align: left; }
+  .info-table td { padding: 12px 16px; font-size: 13px; border-top: 1px solid #f0f0f0; }
+  .info-table tr:hover td { background: #fafafa; }
+
+  /* Badge */
+  .badge {
+    display: inline-block; padding: 3px 10px; border-radius: 20px;
+    font-size: 11px; font-weight: 600;
+  }
+  .badge-success { background: #d4edda; color: #155724; }
+  .badge-warning { background: #fff3cd; color: #856404; }
+  .badge-info { background: #cce5ff; color: #004085; }
+  .badge-secondary { background: #e2e3e5; color: #383d41; }
+
+  /* Checklist */
+  .checklist { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .check-item { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
+  .check-item:last-child { border-bottom: none; }
+  .check-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .check-title { font-size: 14px; font-weight: 600; }
+  .check-desc { font-size: 12px; color: #6c757d; margin-top: 2px; }
+
+  /* Knowledge */
+  .knowledge-bar { margin-bottom: 12px; }
+  .knowledge-bar .bar-label { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; }
+  .bar-track { background: #e9ecef; border-radius: 4px; height: 10px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; }
+
+  /* Deploy Box */
+  .deploy-box {
+    background: #1a1a2e; color: #e2e8f0; border-radius: 12px;
+    padding: 24px; font-family: 'Courier New', monospace; font-size: 13px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  .deploy-box .cmd-line { margin: 6px 0; }
+  .deploy-box .prompt { color: #667eea; }
+  .deploy-box .cmd { color: #68d391; }
+  .deploy-box .comment { color: #718096; }
+  .deploy-box .url { color: #fbb6ce; }
+
+  /* URL Card */
+  .url-card {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white; border-radius: 12px; padding: 24px 30px;
+    text-align: center;
+  }
+  .url-card .url-label { font-size: 12px; opacity: 0.8; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+  .url-card .url-text { font-size: 20px; font-weight: 700; }
+
+  /* Warning Box */
+  .warning-box {
+    background: #fff3cd; border: 1px solid #ffc107; border-radius: 10px;
+    padding: 16px 20px; display: flex; gap: 12px; align-items: flex-start;
+  }
+  .warning-box .warn-icon { font-size: 18px; flex-shrink: 0; }
+  .warning-box p { font-size: 13px; color: #856404; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 700px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  footer { text-align: center; font-size: 12px; color: #adb5bd; padding: 30px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>ミニえのぽこまん AIチャットボット</h1>
+  <p>プロジェクト現状レポート ― 構成・データ・デプロイ状況の全体把握</p>
+  <div class="date">作成者：有村大祐（たのパパ）｜2026年4月12日</div>
+</div>
+
+<div class="container">
+
+  <!-- ステータスバナー -->
+  <div class="status-banner">
+    <div class="icon">✅</div>
+    <div>
+      <h2>本番稼働中</h2>
+      <p>Vercelデプロイ完了・全ナレッジ投入済み・クライアント環境変数設定完了</p>
+    </div>
+  </div>
+
+  <!-- 数値サマリー -->
+  <div class="section">
+    <div class="section-title">データサマリー</div>
+    <div class="cards">
+      <div class="card">
+        <div class="label">Pineconeベクター数</div>
+        <div class="value">992</div>
+        <div class="sub">チャンク（検索可能なナレッジ）</div>
+      </div>
+      <div class="card">
+        <div class="label">動画文字起こし</div>
+        <div class="value">43</div>
+        <div class="sub">本 すべて投入済み</div>
+      </div>
+      <div class="card">
+        <div class="label">X投稿</div>
+        <div class="value">190</div>
+        <div class="sub">チャンク</div>
+      </div>
+      <div class="card">
+        <div class="label">マインドコラム</div>
+        <div class="value">71</div>
+        <div class="sub">チャンク</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ナレッジ内訳 -->
+  <div class="section">
+    <div class="section-title">ナレッジ構成</div>
+    <div class="arch">
+      <div class="knowledge-bar">
+        <div class="bar-label"><span>動画文字起こし（video_transcript）</span><span>731チャンク（74%）</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:74%; background:#667eea;"></div></div>
+      </div>
+      <div class="knowledge-bar">
+        <div class="bar-label"><span>X投稿（x_post）</span><span>190チャンク（19%）</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:19%; background:#28a745;"></div></div>
+      </div>
+      <div class="knowledge-bar">
+        <div class="bar-label"><span>マインドコラム（mind_column）</span><span>71チャンク（7%）</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:7%; background:#ffc107;"></div></div>
+      </div>
+      <p style="font-size:12px; color:#6c757d; margin-top:16px;">合計 992チャンク ／ Pineconeインデックス: enopokoman-index（us-east-1）</p>
+    </div>
+  </div>
+
+  <!-- アーキテクチャ -->
+  <div class="section">
+    <div class="section-title">システム構成</div>
+    <div class="arch">
+      <div class="arch-flow">
+        <div class="arch-box">
+          <div class="arch-icon">👤</div>
+          <div class="arch-name">ユーザー</div>
+          <div class="arch-detail">えのぽこまんさんの受講生</div>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box primary">
+          <div class="arch-icon">💬</div>
+          <div class="arch-name">Next.js 16</div>
+          <div class="arch-detail">チャットUI・3モード</div>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box">
+          <div class="arch-icon">🔍</div>
+          <div class="arch-name">Pinecone</div>
+          <div class="arch-detail">RAGベクター検索</div>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box">
+          <div class="arch-icon">🧠</div>
+          <div class="arch-name">Gemini 2.5</div>
+          <div class="arch-detail">Flash（回答生成）</div>
+        </div>
+      </div>
+      <div class="arch-flow" style="margin-top:0;">
+        <div class="arch-box success">
+          <div class="arch-icon">▲</div>
+          <div class="arch-name">Vercel</div>
+          <div class="arch-detail">Hobbyプラン（無料）</div>
+        </div>
+        <div class="arch-arrow">↔</div>
+        <div class="arch-box">
+          <div class="arch-icon">📊</div>
+          <div class="arch-name">Lark Base</div>
+          <div class="arch-detail">会話ログ・ユーザー管理</div>
+        </div>
+        <div class="arch-arrow">↔</div>
+        <div class="arch-box">
+          <div class="arch-icon">🔐</div>
+          <div class="arch-name">Better Auth</div>
+          <div class="arch-detail">ログイン認証</div>
+        </div>
+      </div>
+      <p style="font-size:12px; color:#6c757d; text-align:center; margin-top:8px;">3モード: コンセプト設計（紫）/ 自己分析（シアン）/ 戦略設計（アンバー）</p>
+    </div>
+  </div>
+
+  <!-- 本番URL -->
+  <div class="section">
+    <div class="section-title">本番環境URL</div>
+    <div class="url-card">
+      <div class="url-label">Production URL</div>
+      <div class="url-text">https://enopokoman-client.vercel.app</div>
+    </div>
+  </div>
+
+  <!-- 環境変数 -->
+  <div class="section">
+    <div class="section-title">環境変数（Vercel設定済み 15個）</div>
+    <table class="info-table">
+      <tr>
+        <th>変数名</th>
+        <th>内容</th>
+        <th>状態</th>
+        <th>管理者</th>
+      </tr>
+      <tr>
+        <td><code>GEMINI_API_KEY</code></td>
+        <td>Gemini 2.5 Flash（AI回答生成）</td>
+        <td><span class="badge badge-success">設定済み</span></td>
+        <td>えのぽこまんさん</td>
+      </tr>
+      <tr>
+        <td><code>PINECONE_API_KEY</code></td>
+        <td>ベクターDB（RAG検索）</td>
+        <td><span class="badge badge-success">設定済み</span></td>
+        <td>えのぽこまんさん</td>
+      </tr>
+      <tr>
+        <td><code>PINECONE_ENVIRONMENT</code></td>
+        <td>us-east-1</td>
+        <td><span class="badge badge-success">設定済み</span></td>
+        <td>えのぽこまんさん</td>
+      </tr>
+      <tr>
+        <td><code>PINECONE_INDEX_NAME</code></td>
+        <td>enopokoman-index</td>
+        <td><span class="badge badge-success">設定済み</span></td>
+        <td>えのぽこまんさん</td>
+      </tr>
+      <tr>
+        <td><code>LARK_APP_ID</code></td>
+        <td>LarkアプリID</td>
+        <td><span class="badge badge-success">設定済み</span></td>
+        <td>えのぽこまんさん</td>
+      </tr>
+      <tr>
+        <td><code>LARK_APP_SECRET</code></td>
+        <td>Larkアプリシークレット</td>
+        <td><span class="badge badge-success">設定済み</span></td>
+        <td>えのぽこまんさん</td>
+      </tr>
+      <tr>
+        <td><code>LARK_BASE_ID</code></td>
+        <td>Lark Base アプリID</td>
+        <td><span class="badge badge-success">設定済み</span></td>
+        <td>えのぽこまんさん</td>
+      </tr>
+      <tr>
+        <td><code>LARK_KNOWLEDGE_TABLE_ID</code></td>
+        <td>ナレッジテーブル</td>
+        <td><span class="badge badge-success">設定済み</span></td>
+        <td>えのぽこまんさん</td>
+      </tr>
+      <tr>
+        <td><code>LARK_CHATLOG_TABLE_ID</code></td>
+        <td>会話ログテーブル</td>
+        <td><span class="badge badge-success">設定済み</span></td>
+        <td>えのぽこまんさん</td>
+      </tr>
+      <tr>
+        <td><code>LARK_USERS_TABLE_ID</code></td>
+        <td>ユーザーテーブル</td>
+        <td><span class="badge badge-success">設定済み</span></td>
+        <td>えのぽこまんさん</td>
+      </tr>
+      <tr>
+        <td><code>LARK_SESSIONS_TABLE_ID</code></td>
+        <td>セッションテーブル</td>
+        <td><span class="badge badge-success">設定済み</span></td>
+        <td>えのぽこまんさん</td>
+      </tr>
+      <tr>
+        <td><code>LARK_CHAT_SESSIONS_TABLE_ID</code></td>
+        <td>チャットセッションテーブル</td>
+        <td><span class="badge badge-success">設定済み</span></td>
+        <td>えのぽこまんさん</td>
+      </tr>
+      <tr>
+        <td><code>BETTER_AUTH_URL</code></td>
+        <td>https://enopokoman-client.vercel.app</td>
+        <td><span class="badge badge-success">設定済み</span></td>
+        <td>有村</td>
+      </tr>
+      <tr>
+        <td><code>BETTER_AUTH_SECRET</code></td>
+        <td>本番用ランダム値</td>
+        <td><span class="badge badge-success">設定済み</span></td>
+        <td>有村</td>
+      </tr>
+      <tr>
+        <td><code>CRON_SECRET</code></td>
+        <td>Sync API保護キー</td>
+        <td><span class="badge badge-success">設定済み</span></td>
+        <td>有村</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- 完了チェックリスト -->
+  <div class="section">
+    <div class="section-title">作業完了チェックリスト</div>
+    <div class="checklist">
+      <div class="check-item">
+        <div class="check-icon">✅</div>
+        <div>
+          <div class="check-title">ソースコード復元</div>
+          <div class="check-desc">Vercelデプロイから92ファイルを復元（2026-04-01）</div>
+        </div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">✅</div>
+        <div>
+          <div class="check-title">動画文字起こし自動化</div>
+          <div class="check-desc">~/transcribe_watch.sh を構築（Whisper large-v3、2026-04-09）</div>
+        </div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">✅</div>
+        <div>
+          <div class="check-title">Pineconeナレッジ投入（全件）</div>
+          <div class="check-desc">動画43本＋X投稿＋コラム = 992チャンク（2026-04-12）</div>
+        </div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">✅</div>
+        <div>
+          <div class="check-title">クライアントAPIキー設定</div>
+          <div class="check-desc">Gemini・Pinecone・Lark すべてえのぽこまんさんのキーに更新</div>
+        </div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">✅</div>
+        <div>
+          <div class="check-title">Vercel本番デプロイ</div>
+          <div class="check-desc">enopokoman-client.vercel.app で稼働中</div>
+        </div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">✅</div>
+        <div>
+          <div class="check-title">認証設定（Better Auth）</div>
+          <div class="check-desc">本番URL・シークレット更新完了</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 残タスク -->
+  <div class="section">
+    <div class="section-title">残タスク・今後の対応</div>
+    <div class="checklist">
+      <div class="check-item">
+        <div class="check-icon">🔲</div>
+        <div>
+          <div class="check-title">動作確認・テスト</div>
+          <div class="check-desc">ログイン → チャット → 3モード動作確認。えのぽこまんさんに操作してもらう</div>
+        </div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">🔲</div>
+        <div>
+          <div class="check-title">管理者アカウント作成</div>
+          <div class="check-desc">/register ページからえのぽこまんさんのアカウントを作成</div>
+        </div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">🔲</div>
+        <div>
+          <div class="check-title">カスタムドメイン（任意）</div>
+          <div class="check-desc">独自ドメインが必要な場合はVercelで設定。現状は不要</div>
+        </div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">🔲</div>
+        <div>
+          <div class="check-title">Vercel移管（契約終了時）</div>
+          <div class="check-desc">完全引き渡し時にえのぽこまんさんのVercelアカウントに移管</div>
+        </div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">🔲</div>
+        <div>
+          <div class="check-title">新動画の追加投入</div>
+          <div class="check-desc">今後の動画は transcribe_watch.sh → ingest-video-transcripts.sh で追加可能</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- デプロイ方法 -->
+  <div class="section">
+    <div class="section-title">今後の更新・デプロイ手順</div>
+    <div class="grid-2">
+      <div>
+        <div class="deploy-box">
+          <div class="cmd-line"><span class="comment"># コード修正後のデプロイ</span></div>
+          <div class="cmd-line"><span class="prompt">$</span> <span class="cmd">cd lark-dx-operation/minienopokomanchatbot</span></div>
+          <div class="cmd-line"><span class="comment"># コードを修正...</span></div>
+          <div class="cmd-line"><span class="prompt">$</span> <span class="cmd">vercel --prod</span></div>
+          <div class="cmd-line" style="margin-top:8px;"><span class="url">→ https://enopokoman-client.vercel.app</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="deploy-box">
+          <div class="cmd-line"><span class="comment"># 新動画を追加する場合</span></div>
+          <div class="cmd-line"><span class="prompt">$</span> <span class="cmd">~/transcribe_watch.sh</span></div>
+          <div class="cmd-line"><span class="comment"># 動画フォルダに mp4 を置く → 自動文字起こし</span></div>
+          <div class="cmd-line" style="margin-top:8px;"></div>
+          <div class="cmd-line"><span class="prompt">$</span> <span class="cmd">bash scripts/ingest-video-transcripts.sh</span></div>
+          <div class="cmd-line"><span class="comment"># Pineconeに追加投入（完了済みはスキップ）</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vercel管理について -->
+  <div class="section">
+    <div class="section-title">Vercel管理体制</div>
+    <div class="warning-box">
+      <div class="warn-icon">ℹ️</div>
+      <p><strong>現在の管理体制：</strong> Vercelプロジェクトは有村のアカウント（ariomorios-projects）配下で管理。クライアントのAPIキーを使用しているが、ホスティング管理は有村が担当。契約終了・完全引き渡し時にえのぽこまんさんのVercelアカウントへ移管する。</p>
+    </div>
+    <br>
+    <table class="info-table" style="margin-top:0;">
+      <tr>
+        <th>項目</th>
+        <th>現状</th>
+        <th>移管時</th>
+      </tr>
+      <tr>
+        <td>Vercelプロジェクト</td>
+        <td>ariomorios-projects / enopokoman-client</td>
+        <td>instaPro123のVercelへ移管</td>
+      </tr>
+      <tr>
+        <td>デプロイ担当</td>
+        <td>有村（vercel --prod）</td>
+        <td>有村（継続）または移管</td>
+      </tr>
+      <tr>
+        <td>API利用料金</td>
+        <td>えのぽこまんさん負担（Gemini・Pinecone）</td>
+        <td>変更なし</td>
+      </tr>
+      <tr>
+        <td>Vercelホスティング料金</td>
+        <td>有村負担（Hobbyプラン無料）</td>
+        <td>えのぽこまんさん負担へ</td>
+      </tr>
+    </table>
+  </div>
+
+</div>
+
+<footer>
+  ミニえのぽこまん AIチャットボット｜作成者：有村大祐（たのパパ）｜2026年4月12日
+</footer>
+
+</body>
+</html>

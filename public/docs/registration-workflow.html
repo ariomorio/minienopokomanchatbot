@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ミニえのぽこまん - ユーザー登録ワークフロー</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+            background: #0a0a0a;
+            color: #e5e5e5;
+            line-height: 1.7;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+        .header p {
+            color: #a3a3a3;
+            font-size: 14px;
+        }
+
+        /* ワークフロー全体 */
+        .workflow {
+            position: relative;
+        }
+
+        /* ステップカード */
+        .step {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        /* 左側: ステップ番号と線 */
+        .step-indicator {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 48px;
+        }
+        .step-number {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 18px;
+            color: #fff;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 1;
+        }
+        .step-line {
+            width: 3px;
+            flex: 1;
+            min-height: 20px;
+        }
+
+        /* 右側: コンテンツ */
+        .step-content {
+            flex: 1;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 8px;
+        }
+        .step-content h3 {
+            font-size: 17px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+        .step-content p {
+            font-size: 14px;
+            color: #a3a3a3;
+            margin-bottom: 12px;
+        }
+
+        /* 役割バッジ */
+        .role-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        .role-user { background: #1e3a5f; color: #60a5fa; }
+        .role-admin { background: #3b1f54; color: #c084fc; }
+        .role-system { background: #1a3a2a; color: #4ade80; }
+
+        /* カラーテーマ: ユーザー */
+        .theme-user .step-number { background: #1d4ed8; }
+        .theme-user .step-line { background: linear-gradient(to bottom, #1d4ed8, #1d4ed8 60%, transparent); }
+        .theme-user .step-content { background: #111827; border: 1px solid #1e3a5f; }
+
+        /* カラーテーマ: システム */
+        .theme-system .step-number { background: #059669; }
+        .theme-system .step-line { background: linear-gradient(to bottom, #059669, #059669 60%, transparent); }
+        .theme-system .step-content { background: #0f1f17; border: 1px solid #1a3a2a; }
+
+        /* カラーテーマ: 管理者 */
+        .theme-admin .step-number { background: #7c3aed; }
+        .theme-admin .step-line { background: linear-gradient(to bottom, #7c3aed, #7c3aed 60%, transparent); }
+        .theme-admin .step-content { background: #1a1028; border: 1px solid #3b1f54; }
+
+        /* 詳細リスト */
+        .detail-list {
+            list-style: none;
+            padding: 0;
+        }
+        .detail-list li {
+            padding: 6px 0;
+            font-size: 13px;
+            color: #d4d4d4;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        .detail-list li::before {
+            content: "";
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #525252;
+            margin-top: 8px;
+            flex-shrink: 0;
+        }
+
+        /* 矢印セパレータ */
+        .arrow-sep {
+            text-align: center;
+            padding: 4px 0;
+            color: #525252;
+            font-size: 20px;
+        }
+
+        /* フッター */
+        .footer {
+            text-align: center;
+            margin-top: 48px;
+            padding-top: 24px;
+            border-top: 1px solid #262626;
+        }
+        .footer p {
+            font-size: 12px;
+            color: #525252;
+        }
+
+        /* セクションタイトル */
+        .section-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #737373;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 24px;
+            margin-top: 40px;
+            text-align: center;
+        }
+        .section-title:first-child {
+            margin-top: 0;
+        }
+
+        /* サマリーボックス */
+        .summary-box {
+            background: #18181b;
+            border: 1px solid #27272a;
+            border-radius: 16px;
+            padding: 24px;
+            margin-top: 40px;
+        }
+        .summary-box h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 16px;
+        }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        .summary-item {
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .summary-item.blue { background: #111827; border: 1px solid #1e3a5f; }
+        .summary-item.purple { background: #1a1028; border: 1px solid #3b1f54; }
+        .summary-item.green { background: #0f1f17; border: 1px solid #1a3a2a; }
+        .summary-item .icon { font-size: 28px; margin-bottom: 8px; }
+        .summary-item .label { font-size: 12px; color: #737373; margin-bottom: 4px; }
+        .summary-item .value { font-size: 15px; font-weight: 600; color: #fff; }
+
+        /* モバイル対応 */
+        @media (max-width: 640px) {
+            body { padding: 24px 16px; }
+            .header h1 { font-size: 22px; }
+            .step { gap: 16px; }
+            .step-indicator { min-width: 40px; }
+            .step-number { width: 40px; height: 40px; font-size: 16px; }
+            .step-content { padding: 16px; }
+            .step-content h3 { font-size: 15px; }
+            .summary-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>ミニえのぽこまん</h1>
+            <p>ユーザー登録 &rarr; 承認 &rarr; 利用開始 ワークフロー</p>
+        </div>
+
+        <div class="workflow">
+
+            <!-- Phase 1: ユーザー登録 -->
+            <div class="section-title">Phase 1 &mdash; ユーザー登録</div>
+
+            <div class="step theme-user">
+                <div class="step-indicator">
+                    <div class="step-number">1</div>
+                    <div class="step-line"></div>
+                </div>
+                <div class="step-content">
+                    <span class="role-badge role-user">受講者</span>
+                    <h3>登録ページにアクセス</h3>
+                    <p>管理者から共有されたURLとパスコードを使って登録ページを開きます。</p>
+                    <ul class="detail-list">
+                        <li>URL: mini-enopokoman-chatbot.vercel.app/register</li>
+                        <li>招待コード（パスコード）が必要</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="step theme-user">
+                <div class="step-indicator">
+                    <div class="step-number">2</div>
+                    <div class="step-line"></div>
+                </div>
+                <div class="step-content">
+                    <span class="role-badge role-user">受講者</span>
+                    <h3>アカウント情報を入力</h3>
+                    <p>以下の情報を入力して「登録」ボタンを押します。</p>
+                    <ul class="detail-list">
+                        <li>名前（フルネーム） &mdash; 本人確認用</li>
+                        <li>メールアドレス &mdash; ログインに使用</li>
+                        <li>パスワード &mdash; 8文字以上</li>
+                        <li>招待コード &mdash; 管理者から共有されたコード</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="step theme-system">
+                <div class="step-indicator">
+                    <div class="step-number">3</div>
+                    <div class="step-line"></div>
+                </div>
+                <div class="step-content">
+                    <span class="role-badge role-system">自動</span>
+                    <h3>登録完了 &amp; 管理者に通知</h3>
+                    <p>アカウントが「承認待ち」ステータスで作成されます。管理者にメール通知が届きます。</p>
+                    <ul class="detail-list">
+                        <li>画面に「管理者の承認後にご利用いただけます」と表示</li>
+                        <li>管理者宛にメール通知が自動送信</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Phase 2: 管理者承認 -->
+            <div class="section-title">Phase 2 &mdash; 管理者承認</div>
+
+            <div class="step theme-admin">
+                <div class="step-indicator">
+                    <div class="step-number">4</div>
+                    <div class="step-line"></div>
+                </div>
+                <div class="step-content">
+                    <span class="role-badge role-admin">管理者</span>
+                    <h3>通知を受け取る</h3>
+                    <p>新規登録があると、管理者のメールアドレスに通知が届きます。</p>
+                    <ul class="detail-list">
+                        <li>登録者の名前とメールアドレスが記載</li>
+                        <li>管理画面で承認するよう案内</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="step theme-admin">
+                <div class="step-indicator">
+                    <div class="step-number">5</div>
+                    <div class="step-line"></div>
+                </div>
+                <div class="step-content">
+                    <span class="role-badge role-admin">管理者</span>
+                    <h3>管理画面で承認/拒否</h3>
+                    <p>管理画面のユーザー管理ページで、承認待ちユーザーを確認し、承認または拒否します。</p>
+                    <ul class="detail-list">
+                        <li>管理画面URL: /admin/users</li>
+                        <li>管理者シークレットでログイン</li>
+                        <li>名前・メールアドレスを確認して「承認」ボタンを押す</li>
+                        <li>不明なユーザーは「拒否」で対応</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Phase 3: 利用開始 -->
+            <div class="section-title">Phase 3 &mdash; 利用開始</div>
+
+            <div class="step theme-user">
+                <div class="step-indicator">
+                    <div class="step-number">6</div>
+                    <div class="step-line"></div>
+                </div>
+                <div class="step-content">
+                    <span class="role-badge role-user">受講者</span>
+                    <h3>ログイン &amp; チャット開始</h3>
+                    <p>管理者に承認されたら、登録したメールアドレスとパスワードでログインできます。</p>
+                    <ul class="detail-list">
+                        <li>ログインURL: mini-enopokoman-chatbot.vercel.app/login</li>
+                        <li>ログイン後、AIチャットが利用可能に</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- サマリー -->
+        <div class="summary-box">
+            <h2>管理者ができること</h2>
+            <div class="summary-grid">
+                <div class="summary-item purple">
+                    <div class="icon">&#x1F511;</div>
+                    <div class="label">招待コード管理</div>
+                    <div class="value">コードの変更</div>
+                </div>
+                <div class="summary-item purple">
+                    <div class="icon">&#x2705;</div>
+                    <div class="label">ユーザー承認</div>
+                    <div class="value">承認 / 拒否</div>
+                </div>
+                <div class="summary-item purple">
+                    <div class="icon">&#x1F4CA;</div>
+                    <div class="label">利用状況</div>
+                    <div class="value">会話履歴の確認</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="summary-box">
+            <h2>セキュリティ</h2>
+            <div class="summary-grid">
+                <div class="summary-item green">
+                    <div class="icon">&#x1F6E1;&#xFE0F;</div>
+                    <div class="label">二重ゲート</div>
+                    <div class="value">招待コード + 管理者承認</div>
+                </div>
+                <div class="summary-item green">
+                    <div class="icon">&#x1F512;</div>
+                    <div class="label">パスワード</div>
+                    <div class="value">暗号化保存</div>
+                </div>
+                <div class="summary-item green">
+                    <div class="icon">&#x1F4E7;</div>
+                    <div class="label">通知</div>
+                    <div class="value">登録時メール通知</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>ミニえのぽこまん AIチャットボット &mdash; 作成: 有村大祐（たのパパ）</p>
+        </div>
+    </div>
+</body>
+</html>

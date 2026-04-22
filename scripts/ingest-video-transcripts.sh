@@ -5,12 +5,14 @@ set -euo pipefail
 TRANSCRIPT_DIR="/Users/ariomorio/Downloads/みにえのぽこまん動画/transcripts"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+DONE_LOG="$SCRIPT_DIR/transcripts-done.log"
 
 cd "$PROJECT_DIR"
 
 total=0
 success=0
 fail=0
+skipped=0
 
 for dir in "$TRANSCRIPT_DIR"/artifact-*/; do
   file="$dir/transcript.txt"
@@ -24,12 +26,21 @@ for dir in "$TRANSCRIPT_DIR"/artifact-*/; do
   title="${dirname#artifact-}"
   title="${title%-obj*}"
 
+  # 完了済みはスキップ
+  if [[ -f "$DONE_LOG" ]] && grep -qxF "$title" "$DONE_LOG"; then
+    ((skipped++))
+    echo "[SKIP] $title"
+    continue
+  fi
+
   ((total++))
   echo "[$total] Processing: $title"
 
-  if node scripts/ingest-to-pinecone.js --file "$file" --type "video_transcript" 2>&1; then
+  if node scripts/ingest-to-pinecone.js --file "$file" --type "video_transcript" --title "$title" 2>&1; then
     ((success++))
     echo "  -> OK"
+    # 完了済みリストに追記
+    echo "$title" >> "$DONE_LOG"
   else
     ((fail++))
     echo "  -> FAILED"
@@ -38,6 +49,8 @@ for dir in "$TRANSCRIPT_DIR"/artifact-*/; do
   # Rate limit対策
   sleep 2
 done
+
+echo "スキップ: $skipped件"
 
 echo ""
 echo "=== 完了 ==="

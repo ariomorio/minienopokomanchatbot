@@ -193,13 +193,34 @@ async function embedAndUpsertWithLark(chunks, sourceType, sourceFile, token) {
                 // Rate limit対策
                 if (j > 0) await new Promise(r => setTimeout(r, 200));
 
-                // 2. Gemini でエンベディング生成
-                const result = await embeddingModel.embedContent({
-                    content: { parts: [{ text: chunkText }] },
-                    outputDimensionality: 768,
-                });
+                // 2. Gemini でエンベディング生成（タイムアウト15秒 + 最大3回リトライ）
+                const crypto = require('crypto');
+                let result;
+                for (let retry = 0; retry < 3; retry++) {
+                    try {
+                        const controller = new AbortController();
+                        const timer = setTimeout(() => controller.abort(), 15000);
+                        result = await embeddingModel.embedContent(
+                            { content: { parts: [{ text: chunkText }] }, outputDimensionality: 768 },
+                            { signal: controller.signal }
+                        );
+                        clearTimeout(timer);
+                        break;
+                    } catch (retryErr) {
+                        if (retry < 2) {
+                            const wait = (retry + 1) * 3000;
+                            console.log(`  Chunk ${chunkIndex} embed retry ${retry + 1}/3 (${retryErr.message.substring(0,40)}), wait ${wait/1000}s...`);
+                            await new Promise(r => setTimeout(r, wait));
+                        } else {
+                            throw retryErr;
+                        }
+                    }
+                }
 
-                const fileSlug = sourceFile.replace(/[^a-zA-Z0-9\u3000-\u9FFF]/g, '_').substring(0, 80);
+                // PineconeのIDはASCII限定。日本語タイトルはハッシュ化して一意性を保つ
+                const titleHash = crypto.createHash('md5').update(sourceFile).digest('hex').substring(0, 8);
+                const asciiSlug = sourceFile.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 40);
+                const fileSlug = asciiSlug ? `${asciiSlug}_${titleHash}` : titleHash;
                 const pineconeId = `${sourceType}_${fileSlug}_${chunkIndex}`;
 
                 vectors.push({
@@ -250,6 +271,7 @@ async function main() {
     const syncOnly = args.includes('--sync-only');
     const fileIdx = args.indexOf('--file');
     const typeIdx = args.indexOf('--type');
+    const titleIdx = args.indexOf('--title');
 
     console.log('=== Pinecone Data Ingestion (Lark Base連携版) ===\n');
 
@@ -275,7 +297,11 @@ async function main() {
         const chunks = splitGenericText(text);
         console.log(`  Chunks created: ${chunks.length}`);
 
-        const count = await embedAndUpsertWithLark(chunks, sourceType, path.basename(filePath), token);
+        // --title が指定されていればそちらを優先（transcript.txt のような汎用名で重複しないように）
+        const sourceLabel = (titleIdx !== -1 && args[titleIdx + 1])
+            ? args[titleIdx + 1]
+            : path.basename(filePath);
+        const count = await embedAndUpsertWithLark(chunks, sourceType, sourceLabel, token);
         console.log(`  Done: ${count} vectors upserted\n`);
     } else {
         // デフォルト: マインドコラム + X投稿
