@@ -4,7 +4,7 @@ import {
     createKnowledgeRecord,
     updateKnowledgeRecord,
     getAccessToken,
-} from '@/lib/lark';
+} from '@/lib/supabase';
 import { preprocessForKnowledge, preprocessMeetingTranscript } from '@/lib/ai-preprocess';
 import { upsertVectors } from '@/lib/vectordb';
 import { GoogleGenerativeAI } from '@google/generative-ai';
@@ -156,7 +156,7 @@ export async function POST(request: NextRequest) {
     try {
         // 認証チェック（CRON_SECRET）
         const authHeader = request.headers.get('authorization');
-        const cronSecret = process.env.CRON_SECRET;
+        const cronSecret = (process.env.CRON_SECRET || '').trim();
 
         if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
             return new Response(

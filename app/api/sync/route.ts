@@ -3,7 +3,7 @@ import { NextRequest } from 'next/server';
 import {
     fetchPendingKnowledgeRecords,
     updateKnowledgeRecord,
-} from '@/lib/lark';
+} from '@/lib/supabase';
 import { upsertVectors } from '@/lib/vectordb';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     try {
         // Cron Secretによる認証
         const authHeader = request.headers.get('authorization');
-        const cronSecret = process.env.CRON_SECRET;
+        const cronSecret = (process.env.CRON_SECRET || '').trim();
 
         if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
             return new Response(

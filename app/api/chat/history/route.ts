@@ -1,12 +1,12 @@
 // チャット履歴API - セッションIDに紐づくメッセージを取得（認証付き）
 import { NextRequest } from 'next/server';
-import { getChatLogsBySession } from '@/lib/lark';
+import { getChatLogsBySession } from '@/lib/supabase';
 import { getAuthenticatedUser } from '@/lib/auth-token';
 
 export async function GET(request: NextRequest) {
     try {
         // 認証チェック
-        const authUser = getAuthenticatedUser(request);
+        const authUser = await getAuthenticatedUser(request);
         if (!authUser) {
             return Response.json(
                 { error: '認証が必要です' },

@@ -20,13 +20,13 @@ export async function generateResponseStream(
 
     // モデルの初期化（システムプロンプトを設定）
     const model = genAI.getGenerativeModel({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-2.5-flash-lite',
         systemInstruction: systemPrompt,
     });
 
     // 会話履歴の変換（Gemini形式）
     // Gemini SDKのhistoryには最新のユーザーメッセージを含めない（sendMessageStreamで送るため）
-    let history = historyMessages.map((msg) => ({
+    let history = (historyMessages || []).map((msg) => ({
         role: msg.role === 'user' ? 'user' : 'model',
         parts: [{ text: msg.content }],
     }));
@@ -50,8 +50,22 @@ export async function generateResponseStream(
         },
     });
 
-    // ストリーミングレスポンスを生成（ここでユーザーのメッセージを送信）
-    const result = await chat.sendMessageStream(userMessage);
+    // ストリーミングレスポンスを生成（429リトライ付き）
+    let result;
+    for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+            result = await chat.sendMessageStream(userMessage);
+            break;
+        } catch (e: any) {
+            if (e.message?.includes('429') && attempt < 2) {
+                console.log(`Rate limited, retrying in ${(attempt + 1) * 2}s...`);
+                await new Promise(r => setTimeout(r, (attempt + 1) * 2000));
+                continue;
+            }
+            throw e;
+        }
+    }
+    if (!result) throw new Error('Failed after retries');
 
     // ReadableStreamに変換（内部思考リーク防止フィルタ付き）
     return new ReadableStream({

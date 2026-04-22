@@ -149,12 +149,20 @@ function ChatContent() {
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    // 認証チェック（localStorageベース）
+    // 認証チェック（localStorage + サーバー側status確認）
     useEffect(() => {
         const user = localStorage.getItem('user');
         if (!user) {
             router.push('/login');
+            return;
         }
+        // サーバー側で承認状態を確認（セッション一覧APIを利用）
+        fetch('/api/sessions').then(res => {
+            if (res.status === 401) {
+                localStorage.removeItem('user');
+                router.push('/login');
+            }
+        }).catch(() => {});
     }, [router]);
 
     const scrollToBottom = () => {

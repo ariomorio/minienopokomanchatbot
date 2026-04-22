@@ -11,7 +11,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 export async function POST(request: NextRequest) {
     try {
         // 認証チェック
-        const authUser = getAuthenticatedUser(request);
+        const authUser = await getAuthenticatedUser(request);
         if (!authUser) {
             return new Response(
                 JSON.stringify({
@@ -42,24 +42,53 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Vector DBから関連コンテキストを検索
+        // Vector DBから関連コンテキストを検索（429リトライ付き）
         let context = '';
         try {
             const embeddingModel = genAI.getGenerativeModel({
                 model: 'gemini-embedding-001',
             });
-            const embeddingResult = await embeddingModel.embedContent({
-                content: { role: 'user', parts: [{ text: message }] },
-                outputDimensionality: 768,
-            } as any);
-            const embedding = embeddingResult.embedding.values;
-            context = await searchSimilarContext(embedding, 3, 0.7);
+            let embeddingResult;
+            for (let attempt = 0; attempt < 3; attempt++) {
+                try {
+                    embeddingResult = await embeddingModel.embedContent({
+                        content: { role: 'user', parts: [{ text: message }] },
+                        outputDimensionality: 768,
+                    } as any);
+                    break;
+                } catch (retryErr: any) {
+                    if (retryErr.message?.includes('429') && attempt < 2) {
+                        await new Promise(r => setTimeout(r, (attempt + 1) * 2000));
+                        continue;
+                    }
+                    throw retryErr;
+                }
+            }
+            if (embeddingResult) {
+                const embedding = embeddingResult.embedding.values;
+                context = await searchSimilarContext(embedding, 3, 0.7);
+            }
         } catch (e) {
             console.error('Embedding Skipped:', e);
         }
 
-        // AI応答をストリーミングで返す（ログ保存なし）
-        const stream = await generateResponseStream(message, history, context, mode);
+        // AI応答をストリーミングで返す（429リトライ付き）
+        let stream;
+        for (let attempt = 0; attempt < 3; attempt++) {
+            try {
+                stream = await generateResponseStream(message, history, context, mode);
+                break;
+            } catch (retryErr: any) {
+                if (retryErr.message?.includes('429') && attempt < 2) {
+                    console.log(`Chat rate limited, retrying in ${(attempt + 1) * 3}s...`);
+                    await new Promise(r => setTimeout(r, (attempt + 1) * 3000));
+                    continue;
+                }
+                throw retryErr;
+            }
+        }
+        if (!stream) throw new Error('Failed after retries');
+
         return new Response(stream, {
             headers: {
                 'Content-Type': 'text/plain; charset=utf-8',

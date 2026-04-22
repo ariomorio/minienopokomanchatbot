@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { createKnowledgeRecord } from '@/lib/lark';
+import { createKnowledgeRecord } from '@/lib/supabase';
 import { preprocessMeetingTranscript } from '@/lib/ai-preprocess';
 
 export async function POST(request: Request) {
     const authHeader = request.headers.get('Authorization');
     const secret = authHeader?.replace('Bearer ', '');
-    if (secret !== process.env.CRON_SECRET) {
+    if (secret !== (process.env.CRON_SECRET || '').trim()) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

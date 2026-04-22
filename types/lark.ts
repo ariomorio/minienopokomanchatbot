@@ -8,6 +8,7 @@ export interface User {
   name?: string | null;
   image?: string | null;
   password?: string; // ハッシュ化されたパスワード
+  status?: 'pending' | 'approved' | 'rejected';
   createdAt: number;
   updatedAt: number;
 }

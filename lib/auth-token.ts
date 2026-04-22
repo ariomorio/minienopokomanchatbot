@@ -67,10 +67,29 @@ export function getClearCookieHeader(): string {
 
 /**
  * リクエストから認証済みユーザーIDを取得
- * 認証されていない場合は null を返す
+ * トークン検証のみ（DB確認なし）— 内部用
  */
-export function getAuthenticatedUser(request: NextRequest): TokenPayload | null {
+export function getAuthenticatedUserFromToken(request: NextRequest): TokenPayload | null {
     const cookie = request.cookies.get(TOKEN_COOKIE_NAME);
     if (!cookie?.value) return null;
     return verifyAuthToken(cookie.value);
+}
+
+/**
+ * リクエストから認証済み＋承認済みユーザーを取得
+ * トークン検証 + DBのstatus確認
+ * 認証されていない or 未承認の場合は null を返す
+ */
+export async function getAuthenticatedUser(request: NextRequest): Promise<TokenPayload | null> {
+    const tokenPayload = getAuthenticatedUserFromToken(request);
+    if (!tokenPayload) return null;
+
+    // DBからユーザーのstatusを確認
+    const { getUserById } = await import('@/lib/supabase');
+    const user = await getUserById(tokenPayload.userId);
+    if (!user || user.status !== 'approved') {
+        return null;
+    }
+
+    return tokenPayload;
 }

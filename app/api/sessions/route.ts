@@ -1,12 +1,12 @@
 // チャットセッション一覧取得API（認証付き）
 import { NextRequest } from 'next/server';
-import { getChatSessions } from '@/lib/lark';
+import { getChatSessions } from '@/lib/supabase';
 import { getAuthenticatedUser } from '@/lib/auth-token';
 
 export async function GET(request: NextRequest) {
     try {
         // 認証チェック
-        const authUser = getAuthenticatedUser(request);
+        const authUser = await getAuthenticatedUser(request);
         if (!authUser) {
             return Response.json(
                 { error: '認証が必要です' },

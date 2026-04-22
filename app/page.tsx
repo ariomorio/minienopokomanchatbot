@@ -12,11 +12,19 @@ export default function HomePage() {
   const [userName, setUserName] = useState('');
 
   useEffect(() => {
-    // localStorageからユーザー情報を確認
+    // localStorageからユーザー情報を確認 + サーバー側status確認
     const userStr = localStorage.getItem('user');
     if (!userStr) {
       router.push('/login');
-    } else {
+      return;
+    }
+    // サーバー側で承認状態を確認
+    fetch('/api/sessions').then(res => {
+      if (res.status === 401) {
+        localStorage.removeItem('user');
+        router.push('/login');
+        return;
+      }
       setIsAuthenticated(true);
       try {
         const user = JSON.parse(userStr);
@@ -32,8 +40,10 @@ export default function HomePage() {
       } catch {
         setUserName('');
       }
-    }
-    setIsLoading(false);
+      setIsLoading(false);
+    }).catch(() => {
+      setIsLoading(false);
+    });
   }, [router]);
 
   const handleSelectMode = (mode: ChatMode) => {

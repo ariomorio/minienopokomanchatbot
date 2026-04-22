@@ -50,7 +50,7 @@ export async function preprocessForKnowledge(
     }
 
     try {
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
 
         const prompt = `あなたはナレッジベース最適化の専門家です。
 以下のテキストをベクトル検索エンジン（Pinecone）で検索されやすい形に整理してください。
@@ -133,7 +133,7 @@ export async function preprocessMeetingTranscript(
     }
 
     try {
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
 
         const prompt = `あなたは会議議事録の整理とナレッジベース最適化の専門家です。
 以下の会議文字起こしをベクトル検索エンジン（Pinecone）で検索されやすい形に整理してください。

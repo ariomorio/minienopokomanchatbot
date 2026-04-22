@@ -1,6 +1,6 @@
 // Temporary test endpoint - detailed debugging of chat log save path
 import { NextRequest } from 'next/server';
-import { createChatLog, createChatSession, getAccessToken } from '@/lib/lark';
+import { createChatLog, createChatSession, getAccessToken } from '@/lib/supabase';
 import axios from 'axios';
 
 const LARK_API_BASE = 'https://open.larksuite.com/open-apis';
@@ -8,7 +8,7 @@ const LARK_API_BASE = 'https://open.larksuite.com/open-apis';
 export async function POST(request: NextRequest) {
     const authHeader = request.headers.get('Authorization');
     const secret = authHeader?.replace('Bearer ', '');
-    if (secret !== process.env.CRON_SECRET) {
+    if (secret !== (process.env.CRON_SECRET || '').trim()) {
         return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
     }
 

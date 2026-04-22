@@ -11,3 +11,6 @@ tsconfig.tsbuildinfo
 .claude/
 .vercel
 .env.client
+
+# Migration CSV (機密データ・コミット禁止)
+.migration-csv/

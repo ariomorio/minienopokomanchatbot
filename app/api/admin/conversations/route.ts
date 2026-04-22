@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getAccessToken } from '@/lib/lark';
+import { getAccessToken } from '@/lib/supabase';
 import axios from 'axios';
 
 const LARK_API_BASE = 'https://open.larksuite.com/open-apis';
@@ -15,7 +15,7 @@ function extractText(field: any): string {
 export async function GET(request: Request) {
     const authHeader = request.headers.get('Authorization');
     const secret = authHeader?.replace('Bearer ', '');
-    if (secret !== process.env.CRON_SECRET) {
+    if (secret !== (process.env.CRON_SECRET || '').trim()) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

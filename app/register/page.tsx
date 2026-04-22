@@ -10,6 +10,7 @@ export default function RegisterPage() {
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [name, setName] = useState('');
+    const [inviteCode, setInviteCode] = useState('');
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
@@ -31,7 +32,7 @@ export default function RegisterPage() {
             const registerResponse = await fetch('/api/auth/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password, name }),
+                body: JSON.stringify({ email, password, name, inviteCode }),
             });
 
             const registerData = await registerResponse.json();
@@ -45,8 +46,8 @@ export default function RegisterPage() {
                 return;
             }
 
-            // 登録成功 - ログイン画面へリダイレクト
-            alert('登録が完了しました。ログイン画面からログインしてください。');
+            // 登録成功 - 承認待ちメッセージを表示
+            alert('登録が完了しました。管理者の承認後にログインできるようになります。');
             router.push('/login');
         } catch (err) {
             setError('登録に失敗しました。もう一度お試しください。');
@@ -83,14 +84,30 @@ export default function RegisterPage() {
                         )}
 
                         <div>
+                            <label htmlFor="inviteCode" className="block text-sm font-medium text-neutral-300 mb-2">
+                                招待コード
+                            </label>
+                            <input
+                                id="inviteCode"
+                                type="text"
+                                value={inviteCode}
+                                onChange={(e) => setInviteCode(e.target.value)}
+                                required
+                                className="w-full px-4 py-3 bg-neutral-800 text-white placeholder-neutral-500 rounded-lg border border-neutral-700 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all"
+                                placeholder="講座で共有されたコードを入力"
+                            />
+                        </div>
+
+                        <div>
                             <label htmlFor="name" className="block text-sm font-medium text-neutral-300 mb-2">
-                                名前（オプション）
+                                名前（フルネーム）
                             </label>
                             <input
                                 id="name"
                                 type="text"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
+                                required
                                 className="w-full px-4 py-3 bg-neutral-800 text-white placeholder-neutral-500 rounded-lg border border-neutral-700 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all"
                                 placeholder="山田太郎"
                             />

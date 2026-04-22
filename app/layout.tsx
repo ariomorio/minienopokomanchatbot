@@ -11,6 +11,10 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "ミニえのぽこまん | AIコンサルタント",
   description: "あなたの思考を、えのぽこまんが拡張する - AIコンサルティングチャットボット",
+  icons: {
+    icon: "/icon-192.png",
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export default function RootLayout({

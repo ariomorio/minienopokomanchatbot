@@ -1,6 +1,6 @@
 // Admin Status API - Knowledge_Source テーブルの同期状態を取得
 import { NextRequest } from 'next/server';
-import { getAccessToken } from '@/lib/lark';
+import { getAccessToken } from '@/lib/supabase';
 import axios from 'axios';
 
 const LARK_API_BASE = 'https://open.larksuite.com/open-apis';
@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     try {
         // 認証チェック
         const authHeader = request.headers.get('authorization');
-        const cronSecret = process.env.CRON_SECRET;
+        const cronSecret = (process.env.CRON_SECRET || '').trim();
 
         if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
             return new Response(

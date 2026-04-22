@@ -1,5 +1,5 @@
 // セッション詳細API - 特定セッションのメッセージ履歴を取得（認証付き）
-import { getChatLogsBySession } from "@/lib/lark";
+import { getChatLogsBySession } from "@/lib/supabase";
 import { getAuthenticatedUser } from "@/lib/auth-token";
 import { NextRequest } from "next/server";
 
@@ -8,7 +8,7 @@ export async function GET(
     { params }: { params: Promise<{ sessionId: string }> }
 ) {
     // 認証チェック
-    const authUser = getAuthenticatedUser(req);
+    const authUser = await getAuthenticatedUser(req);
     if (!authUser) {
         return new Response(
             JSON.stringify({ error: '認証が必要です' }),

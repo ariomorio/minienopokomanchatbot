@@ -1,6 +1,6 @@
 // カスタムログインAPI
 import { NextRequest } from 'next/server';
-import { getUserByEmail } from '@/lib/lark';
+import { getUserByEmail } from '@/lib/supabase';
 import { verifyPassword } from '@/lib/password';
 import { createAuthToken, getSetCookieHeader } from '@/lib/auth-token';
 
@@ -41,6 +41,21 @@ export async function POST(req: NextRequest) {
             return Response.json(
                 { error: 'メールアドレスまたはパスワードが正しくありません' },
                 { status: 401 }
+            );
+        }
+
+        // 承認ステータスチェック（approved以外はブロック）
+        if (user.status !== 'approved') {
+            if (user.status === 'rejected') {
+                return Response.json(
+                    { error: 'このアカウントは利用が許可されていません。' },
+                    { status: 403 }
+                );
+            }
+            // pending, 未設定, その他すべて
+            return Response.json(
+                { error: 'アカウントは現在承認待ちです。管理者の承認をお待ちください。' },
+                { status: 403 }
             );
         }
 
