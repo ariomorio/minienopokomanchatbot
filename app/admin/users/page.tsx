@@ -16,6 +16,9 @@ export default function AdminUsersPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [updating, setUpdating] = useState<string | null>(null);
+    const [resetting, setResetting] = useState<string | null>(null);
+    const [resetResult, setResetResult] = useState<{ email: string; name: string | null; temporaryPassword: string } | null>(null);
+    const [copied, setCopied] = useState(false);
     const [inviteCode, setInviteCode] = useState("");
     const [newInviteCode, setNewInviteCode] = useState("");
     const [savingCode, setSavingCode] = useState(false);
@@ -115,6 +118,46 @@ export default function AdminUsersPage() {
             alert(`エラー: ${e.message}`);
         } finally {
             setUpdating(null);
+        }
+    };
+
+    const handleResetPassword = async (userId: string, userName: string, email: string) => {
+        const secret = localStorage.getItem("admin_cron_secret");
+        if (!secret) return;
+        if (!confirm(`${userName || email} のパスワードをリセットしますか？\n新しい一時パスワードが発行され、以前のパスワードは無効になります。`)) return;
+
+        setResetting(userId);
+        try {
+            const res = await fetch("/api/admin/users/reset-password", {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${secret}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ userId }),
+            });
+            const json = await res.json();
+            if (json.success) {
+                setResetResult({ email: json.email, name: json.name, temporaryPassword: json.temporaryPassword });
+                setCopied(false);
+            } else {
+                alert(`エラー: ${json.error}`);
+            }
+        } catch (e: any) {
+            alert(`エラー: ${e.message}`);
+        } finally {
+            setResetting(null);
+        }
+    };
+
+    const copyTemporaryPassword = async () => {
+        if (!resetResult) return;
+        try {
+            await navigator.clipboard.writeText(resetResult.temporaryPassword);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch {
+            alert("コピーに失敗しました。手動でコピーしてください。");
         }
     };
 
@@ -265,6 +308,15 @@ export default function AdminUsersPage() {
                                                     拒否
                                                 </button>
                                             )}
+                                            {user.status === "approved" && (
+                                                <button
+                                                    onClick={() => handleResetPassword(user.id, user.name || "", user.email)}
+                                                    disabled={resetting === user.id}
+                                                    className="ml-1 px-3 py-1 bg-blue-600/80 text-white rounded text-xs hover:bg-blue-500 disabled:opacity-50"
+                                                >
+                                                    {resetting === user.id ? "発行中..." : "PWリセット"}
+                                                </button>
+                                            )}
                                         </td>
                                     </tr>
                                 );
@@ -303,12 +355,62 @@ export default function AdminUsersPage() {
                                             拒否
                                         </button>
                                     )}
+                                    {user.status === "approved" && (
+                                        <button
+                                            onClick={() => handleResetPassword(user.id, user.name || "", user.email)}
+                                            disabled={resetting === user.id}
+                                            className="px-3 py-1 bg-blue-600/80 text-white rounded text-xs hover:bg-blue-500 disabled:opacity-50"
+                                        >
+                                            {resetting === user.id ? "発行中..." : "PWリセット"}
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         );
                     })}
                 </div>
             </div>
+
+            {/* 一時パスワード表示モーダル */}
+            {resetResult && (
+                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50" onClick={() => setResetResult(null)}>
+                    <div className="bg-neutral-900 border border-neutral-700 rounded-xl p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+                        <h3 className="text-lg font-semibold text-white mb-2">一時パスワードを発行しました</h3>
+                        <p className="text-neutral-400 text-xs mb-4">
+                            このパスワードは <span className="text-yellow-300">この画面でしか確認できません</span>。<br />
+                            利用者にメール等で安全に伝達してください。
+                        </p>
+                        <div className="bg-neutral-800/50 border border-neutral-700 rounded-lg p-3 mb-4 space-y-2">
+                            <div>
+                                <div className="text-neutral-500 text-xs">対象ユーザー</div>
+                                <div className="text-white text-sm">{resetResult.name || "-"}</div>
+                            </div>
+                            <div>
+                                <div className="text-neutral-500 text-xs">メールアドレス</div>
+                                <div className="text-white text-sm break-all">{resetResult.email}</div>
+                            </div>
+                            <div>
+                                <div className="text-neutral-500 text-xs">一時パスワード</div>
+                                <div className="text-yellow-300 text-lg font-mono tracking-wider select-all">{resetResult.temporaryPassword}</div>
+                            </div>
+                        </div>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={copyTemporaryPassword}
+                                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-500 transition-colors"
+                            >
+                                {copied ? "コピーしました ✓" : "パスワードをコピー"}
+                            </button>
+                            <button
+                                onClick={() => setResetResult(null)}
+                                className="px-4 py-2 bg-neutral-700 text-white rounded-lg text-sm font-medium hover:bg-neutral-600 transition-colors"
+                            >
+                                閉じる
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

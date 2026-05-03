@@ -18,6 +18,22 @@ export async function verifyPassword(password: string, hashedPassword: string): 
 }
 
 /**
+ * 管理者用：一時パスワード生成（紛らわしい文字 0/O/1/I/l 除外）
+ */
+export function generateTemporaryPassword(length = 10): string {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+    const bytes = new Uint8Array(length);
+    crypto.getRandomValues(bytes);
+    let pw = '';
+    for (let i = 0; i < length; i++) {
+        pw += chars[bytes[i] % chars.length];
+    }
+    if (!/[0-9]/.test(pw)) pw = pw.slice(0, -1) + '7';
+    if (!/[a-zA-Z]/.test(pw)) pw = pw.slice(0, -1) + 'A';
+    return pw;
+}
+
+/**
  * パスワードの強度をチェック
  */
 export function validatePassword(password: string): { valid: boolean; message?: string } {
