@@ -113,10 +113,16 @@ export default function LoginPage() {
                         </button>
                     </form>
 
-                    <div className="mt-6 text-center">
+                    <div className="mt-6 text-center space-y-3">
+                        <Link
+                            href="/forgot-password"
+                            className="block text-sm text-purple-400 hover:text-purple-300 transition-colors"
+                        >
+                            パスワードをお忘れの方はこちら
+                        </Link>
                         <Link
                             href="/register"
-                            className="text-sm text-neutral-400 hover:text-neutral-200 transition-colors"
+                            className="block text-sm text-neutral-400 hover:text-neutral-200 transition-colors"
                         >
                             アカウントをお持ちでない方はこちら
                         </Link>

@@ -413,6 +413,93 @@ export async function sendEmailNotification(subject: string, message: string): P
     }
 }
 
+/**
+ * 個別アドレス宛のメール送信 (パスワードリセットなどユーザー宛通知用)
+ * `sendEmailNotification` は管理者宛 (NOTIFY_EMAIL) 固定なので別関数として分離
+ */
+export async function sendUserEmail(to: string, subject: string, html: string, text: string): Promise<void> {
+    const apiKey = env('RESEND_API_KEY');
+    if (!apiKey) {
+        console.log('Resend not configured, cannot send user email');
+        throw new Error('メール送信設定が未設定です');
+    }
+    if (!to || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) {
+        throw new Error('送信先メールアドレスが不正です');
+    }
+    const from = env('RESEND_FROM') || 'ミニえのぽこまん <onboarding@resend.dev>';
+    const response = await axios.post(
+        'https://api.resend.com/emails',
+        {
+            from,
+            to: [to],
+            subject,
+            html,
+            text,
+        },
+        {
+            headers: {
+                Authorization: `Bearer ${apiKey}`,
+                'Content-Type': 'application/json',
+            },
+            validateStatus: () => true,
+        }
+    );
+    if (response.status >= 400) {
+        console.error('sendUserEmail failed:', response.status, response.data);
+        throw new Error(`メール送信に失敗しました (HTTP ${response.status})`);
+    }
+}
+
+// ========== password_reset_tokens ==========
+
+export interface PasswordResetToken {
+    id: string;
+    user_id: string;
+    token_hash: string;
+    expires_at: number;
+    used_at: number | null;
+    created_at: number;
+}
+
+export async function createPasswordResetToken(userId: string, tokenHash: string, expiresAt: number): Promise<void> {
+    const client = getClient();
+    const { error } = await client
+        .from('password_reset_tokens')
+        .insert({ user_id: userId, token_hash: tokenHash, expires_at: expiresAt });
+    if (error) throw new Error(`Supabase Error: ${error.message}`);
+}
+
+export async function getPasswordResetTokenByHash(tokenHash: string): Promise<PasswordResetToken | null> {
+    const client = getClient();
+    const { data, error } = await client
+        .from('password_reset_tokens')
+        .select('*')
+        .eq('token_hash', tokenHash)
+        .maybeSingle();
+    if (error) throw new Error(`Supabase Error: ${error.message}`);
+    return (data as PasswordResetToken) || null;
+}
+
+export async function markPasswordResetTokenUsed(id: string): Promise<void> {
+    const client = getClient();
+    const { error } = await client
+        .from('password_reset_tokens')
+        .update({ used_at: Date.now() })
+        .eq('id', id);
+    if (error) throw new Error(`Supabase Error: ${error.message}`);
+}
+
+export async function invalidateUserResetTokens(userId: string): Promise<void> {
+    const client = getClient();
+    // 同一ユーザーの未使用トークンをまとめて使用済みに (新規発行時の旧トークン無効化)
+    const { error } = await client
+        .from('password_reset_tokens')
+        .update({ used_at: Date.now() })
+        .eq('user_id', userId)
+        .is('used_at', null);
+    if (error) throw new Error(`Supabase Error: ${error.message}`);
+}
+
 // ========== helpers ==========
 
 function cryptoRandomId(): string {
