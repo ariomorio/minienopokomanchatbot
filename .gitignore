@@ -17,3 +17,6 @@ tsconfig.tsbuildinfo
 
 # Migration CSV (機密データ・コミット禁止)
 .migration-csv/
+
+# Supabase CLI working directory (created by `supabase link`)
+supabase/.temp/
