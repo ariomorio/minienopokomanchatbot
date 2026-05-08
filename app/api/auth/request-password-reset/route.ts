@@ -7,6 +7,7 @@ import {
     createPasswordResetToken,
     invalidateUserResetTokens,
     sendUserEmail,
+    sendEmailNotification,
 } from '@/lib/supabase';
 
 const TOKEN_TTL_MS = 60 * 60 * 1000; // 1時間
@@ -92,6 +93,25 @@ export async function POST(req: NextRequest) {
             // メール送信失敗時もユーザーには成功扱い (内部ログのみ)
             const m = mailErr instanceof Error ? mailErr.message : String(mailErr);
             console.error('Password reset email failed:', m);
+        }
+
+        // 管理者通知 (招待コード発行と同じ NOTIFY_EMAIL = fineo.backoffice@gmail.com 宛)
+        try {
+            await sendEmailNotification(
+                '【ミニえのぽこまん】パスワードリセット申請',
+                [
+                    'パスワードリセットの申請がありました。',
+                    '',
+                    `ユーザー名: ${user.name || '(未設定)'}`,
+                    `メール: ${user.email}`,
+                    `申請日時: ${new Date().toISOString()}`,
+                    '',
+                    '※リセットリンクはユーザー本人にのみ送付されています (1時間有効・1回のみ)。',
+                ].join('\n')
+            );
+        } catch (notifyErr) {
+            const m = notifyErr instanceof Error ? notifyErr.message : String(notifyErr);
+            console.error('Admin notification failed:', m);
         }
 
         return successResponse;

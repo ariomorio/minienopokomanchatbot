@@ -6,6 +6,7 @@ import {
     markPasswordResetTokenUsed,
     getUserById,
     updateUser,
+    sendEmailNotification,
 } from '@/lib/supabase';
 import { hashPassword, validatePassword } from '@/lib/password';
 
@@ -74,6 +75,23 @@ export async function POST(req: NextRequest) {
         const hashed = await hashPassword(newPassword);
         await updateUser(user.id, { password: hashed });
         await markPasswordResetTokenUsed(record.id);
+
+        // 管理者通知 (NOTIFY_EMAIL = fineo.backoffice@gmail.com 宛)
+        try {
+            await sendEmailNotification(
+                '【ミニえのぽこまん】パスワードリセット完了',
+                [
+                    'パスワードリセットが完了しました。',
+                    '',
+                    `ユーザー名: ${user.name || '(未設定)'}`,
+                    `メール: ${user.email}`,
+                    `完了日時: ${new Date().toISOString()}`,
+                ].join('\n')
+            );
+        } catch (notifyErr) {
+            const m = notifyErr instanceof Error ? notifyErr.message : String(notifyErr);
+            console.error('Admin notification failed:', m);
+        }
 
         return Response.json({ success: true });
     } catch (error) {
