@@ -257,6 +257,13 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
                         </div>
                     </div>
                 </div>
+                <Link
+                    href="/account/password"
+                    onClick={onClose}
+                    className="block w-full text-xs text-neutral-500 hover:text-neutral-300 py-2 px-3 rounded-lg hover:bg-neutral-800/50 transition-colors text-left"
+                >
+                    パスワード変更
+                </Link>
                 <button
                     onClick={handleLogout}
                     className="w-full text-xs text-neutral-500 hover:text-neutral-300 py-2 px-3 rounded-lg hover:bg-neutral-800/50 transition-colors text-left"
