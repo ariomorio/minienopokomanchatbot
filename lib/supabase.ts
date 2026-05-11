@@ -242,6 +242,7 @@ function rowToUser(r: any): User {
         name: r.name ?? null,
         image: r.image ?? null,
         status: (r.status as 'pending' | 'approved' | 'rejected') || 'pending',
+        mustChangePassword: r.must_change_password === true,
         createdAt: r.created_at,
         updatedAt: r.updated_at,
     };
@@ -320,6 +321,7 @@ export async function updateUser(userId: string, data: Partial<User>): Promise<v
     if (data.image !== undefined) patch.image = data.image;
     if (data.password !== undefined) patch.password = data.password;
     if (data.status !== undefined) patch.status = data.status;
+    if (data.mustChangePassword !== undefined) patch.must_change_password = data.mustChangePassword;
     const { error } = await client.from('users').update(patch).eq('id', userId);
     if (error) throw new Error(`Supabase Error: ${error.message}`);
 }

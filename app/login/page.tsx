@@ -37,6 +37,13 @@ export default function LoginPage() {
                 localStorage.setItem('user', JSON.stringify(data.user));
             }
 
+            // 一時パスワードでログインした場合は強制パスワード変更画面へ
+            if (data.user?.mustChangePassword) {
+                router.push('/account/password?required=1');
+                router.refresh();
+                return;
+            }
+
             // トップページへリダイレクト
             router.push('/');
             router.refresh();

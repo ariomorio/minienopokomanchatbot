@@ -59,8 +59,8 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        // 認証トークンを生成
-        const token = createAuthToken(user.id, email);
+        // 認証トークンを生成（一時パスワード状態をトークンに埋め込む）
+        const token = createAuthToken(user.id, email, user.mustChangePassword === true);
 
         // ログイン成功 - セッション情報を返す + httpOnly Cookieを設定
         return new Response(
@@ -70,6 +70,7 @@ export async function POST(req: NextRequest) {
                     id: user.id,
                     email: user.email,
                     name: user.name,
+                    mustChangePassword: user.mustChangePassword === true,
                 },
             }),
             {

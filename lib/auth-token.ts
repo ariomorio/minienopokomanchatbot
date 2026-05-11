@@ -11,16 +11,22 @@ interface TokenPayload {
     userId: string;
     email: string;
     exp: number;
+    mustChangePassword?: boolean;
 }
 
 /**
  * トークンを生成（HMAC署名付き）
  */
-export function createAuthToken(userId: string, email: string): string {
+export function createAuthToken(
+    userId: string,
+    email: string,
+    mustChangePassword = false
+): string {
     const payload: TokenPayload = {
         userId,
         email,
         exp: Date.now() + TOKEN_MAX_AGE * 1000,
+        mustChangePassword: mustChangePassword || undefined,
     };
     const payloadStr = Buffer.from(JSON.stringify(payload)).toString('base64url');
     const signature = createHmac('sha256', SECRET).update(payloadStr).digest('base64url');

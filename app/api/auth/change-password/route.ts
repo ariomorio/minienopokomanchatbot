@@ -2,7 +2,11 @@
 import { NextRequest } from 'next/server';
 import { getUserById, updateUser } from '@/lib/supabase';
 import { hashPassword, verifyPassword, validatePassword } from '@/lib/password';
-import { getAuthenticatedUser } from '@/lib/auth-token';
+import {
+    createAuthToken,
+    getAuthenticatedUser,
+    getSetCookieHeader,
+} from '@/lib/auth-token';
 
 export async function POST(req: NextRequest) {
     try {
@@ -56,9 +60,17 @@ export async function POST(req: NextRequest) {
         }
 
         const hashed = await hashPassword(newPassword);
-        await updateUser(auth.userId, { password: hashed });
+        await updateUser(auth.userId, { password: hashed, mustChangePassword: false });
 
-        return Response.json({ success: true });
+        // 強制変更フラグをクリアした新しいトークンで Cookie を差し替える
+        const newToken = createAuthToken(auth.userId, auth.email, false);
+        return new Response(JSON.stringify({ success: true }), {
+            status: 200,
+            headers: {
+                'Content-Type': 'application/json',
+                'Set-Cookie': getSetCookieHeader(newToken),
+            },
+        });
     } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         console.error('Change password error:', message);
