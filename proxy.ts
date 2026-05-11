@@ -60,6 +60,16 @@ async function verifyToken(token: string): Promise<{ mustChangePassword?: boolea
 export async function proxy(req: NextRequest) {
     const { pathname } = req.nextUrl;
 
+    // 明示的に除外: API・Next 内部・静的アセット
+    if (
+        pathname.startsWith('/api/') ||
+        pathname.startsWith('/_next/') ||
+        pathname.startsWith('/images/') ||
+        /\.[a-zA-Z0-9]+$/.test(pathname)
+    ) {
+        return NextResponse.next();
+    }
+
     if (ALLOWED_PATHS.has(pathname)) return NextResponse.next();
 
     const cookie = req.cookies.get('auth_token')?.value;
