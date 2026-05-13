@@ -24,7 +24,7 @@ export async function POST(request: Request) {
 
         const temporaryPassword = generateTemporaryPassword(10);
         const hashed = await hashPassword(temporaryPassword);
-        await updateUser(userId, { password: hashed });
+        await updateUser(userId, { password: hashed, mustChangePassword: true });
 
         sendEmailNotification(
             `🔑 パスワードリセット: ${target.name || target.email}`,

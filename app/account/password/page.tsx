@@ -1,11 +1,21 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
+import { Suspense, useState, FormEvent } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function ChangePasswordPage() {
+    return (
+        <Suspense fallback={null}>
+            <ChangePasswordForm />
+        </Suspense>
+    );
+}
+
+function ChangePasswordForm() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const isRequired = searchParams.get('required') === '1';
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -54,6 +64,26 @@ export default function ChangePasswordPage() {
             setNewPassword('');
             setConfirmPassword('');
             setIsLoading(false);
+
+            // localStorage の mustChangePassword フラグを下げる
+            try {
+                const userStr = localStorage.getItem('user');
+                if (userStr) {
+                    const u = JSON.parse(userStr);
+                    if (u && typeof u === 'object') {
+                        u.mustChangePassword = false;
+                        localStorage.setItem('user', JSON.stringify(u));
+                    }
+                }
+            } catch { /* ignore */ }
+
+            // 強制変更フローならトップへ自動遷移
+            if (isRequired) {
+                setTimeout(() => {
+                    router.push('/');
+                    router.refresh();
+                }, 1500);
+            }
         } catch {
             setError('パスワードの変更に失敗しました。もう一度お試しください。');
             setIsLoading(false);
@@ -65,10 +95,19 @@ export default function ChangePasswordPage() {
             <div className="w-full max-w-md">
                 <div className="text-center mb-8">
                     <h1 className="text-2xl font-bold text-white mb-2">パスワード変更</h1>
-                    <p className="text-neutral-400 text-sm">新しいパスワードを設定してください</p>
+                    <p className="text-neutral-400 text-sm">
+                        {isRequired
+                            ? '管理者が発行した一時パスワードを、ご自身のパスワードに変更してください'
+                            : '新しいパスワードを設定してください'}
+                    </p>
                 </div>
 
                 <div className="bg-neutral-900/80 backdrop-blur-sm border border-neutral-800 rounded-3xl p-8 shadow-2xl">
+                    {isRequired && !success ? (
+                        <div className="mb-5 bg-amber-900/20 border border-amber-800 text-amber-300 px-4 py-3 rounded-lg text-sm">
+                            続行するには、まず新しいパスワードを設定する必要があります。
+                        </div>
+                    ) : null}
                     <form onSubmit={handleSubmit} className="space-y-5">
                         {error ? (
                             <div className="bg-red-900/20 border border-red-800 text-red-400 px-4 py-3 rounded-lg text-sm">
@@ -77,7 +116,9 @@ export default function ChangePasswordPage() {
                         ) : null}
                         {success ? (
                             <div className="bg-green-900/20 border border-green-800 text-green-400 px-4 py-3 rounded-lg text-sm">
-                                パスワードを変更しました。次回のログインから新しいパスワードを使ってください。
+                                {isRequired
+                                    ? 'パスワードを変更しました。トップページへ移動します...'
+                                    : 'パスワードを変更しました。次回のログインから新しいパスワードを使ってください。'}
                             </div>
                         ) : null}
 
